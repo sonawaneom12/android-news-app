@@ -32,7 +32,7 @@
             android:textStyle="bold"
             android:textColor="@android:color/black"
             android:padding="16dp"
-            android:text="News Title" />
+            android:text="News Title Heading" />
 
         <TextView
             android:id="@+id/detailDescription"
