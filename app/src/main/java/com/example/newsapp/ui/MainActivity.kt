@@ -15,21 +15,101 @@ import com.example.newsapp.model.NewsResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.view.Menu
+import android.view.MenuItem
+import androidx.appcompat.widget.SearchView
+import android.view.View
+
 
 class MainActivity : AppCompatActivity() {
 
+    private val apiKey = "a0c586ca2fea78a4ca8535e98c55f4af"
+    private lateinit var recyclerView: RecyclerView
     companion object {
         private const val TAG = "NEWS_APP"
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
+
+        searchView.queryHint = "Search news..."
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (!query.isNullOrEmpty()) {
+                    searchNews(query)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return false
+            }
+        })
+
+        return true
+    }
+
+    private fun searchNews(query: String) {
+
+        RetrofitInstance.api.searchNews(
+            query,
+            "en",
+            10,
+            apiKey
+        ).enqueue(object : Callback<NewsResponse> {
+
+            override fun onResponse(
+                call: Call<NewsResponse>,
+                response: Response<NewsResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val articles = response.body()?.articles ?: emptyList()
+
+                    val newsList = articles.map {
+                        News(
+                            it.title ?: "No Title",
+                            it.description ?: "No Description",
+                            it.image
+                        )
+                    }
+
+                    recyclerView.adapter = NewsAdapter(newsList) { selectedNews ->
+                        openDetail(selectedNews)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<NewsResponse>, t: Throwable) {
+                t.printStackTrace()
+            }
+        })
+    }
+
+    private fun openDetail(news: News) {
+        val intent = Intent(this@MainActivity, NewsDetailActivity::class.java)
+        intent.putExtra("title", news.title)
+        intent.putExtra("description", news.description)
+        intent.putExtra("imageUrl", news.imageUrl)
+        startActivity(intent)
+    }
+
+    fun onCategoryClick(view: View) {
+        val keyword = view.tag.toString()
+        searchNews(keyword)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.newsRecyclerView)
+        recyclerView = findViewById(R.id.newsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val apiKey = "a0c586ca2fea78a4ca8535e98c55f4af"
 
         RetrofitInstance.api.getTopHeadlines("in","en", 10, apiKey)
             .enqueue(object : Callback<NewsResponse> {
