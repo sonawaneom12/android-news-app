@@ -19,6 +19,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
 import android.view.View
+import androidx.appcompat.widget.Toolbar
 
 
 class MainActivity : AppCompatActivity() {
@@ -106,6 +107,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.mainToolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.title = "News"
 
         recyclerView = findViewById(R.id.newsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
